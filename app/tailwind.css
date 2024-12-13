@@ -10,3 +10,8 @@ body {
     color-scheme: dark;
   }
 }
+
+#scene-explorer-host,
+#inspector-host {
+  height: 100%;
+}
