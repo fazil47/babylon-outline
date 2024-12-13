@@ -2,10 +2,12 @@ import {
     AbstractMesh,
     ArcRotateCamera,
     Color3,
+    DepthRenderer,
     Engine,
     HemisphericLight,
     Mesh,
     MeshBuilder,
+    PostProcess,
     Scene,
     SceneLoader,
     StandardMaterial,
@@ -19,12 +21,22 @@ export default class BabylonApp {
     private _scene: Scene;
     private _camera: ArcRotateCamera;
     private _pickedMesh: AbstractMesh | null = null;
+    private _depthRenderer: DepthRenderer;
 
     private pickMeshOnHover = (): void => {
         const pickingInfo = this._scene.pick(
             this._scene.pointerX,
             this._scene.pointerY,
         );
+
+        if (this._pickedMesh !== pickingInfo.pickedMesh) {
+            const depthRtt = this._depthRenderer.getDepthMap();
+            depthRtt.renderList = [];
+
+            if (pickingInfo.pickedMesh) {
+                depthRtt.renderList?.push(pickingInfo.pickedMesh);
+            }
+        }
 
         this._pickedMesh = pickingInfo.pickedMesh;
     };
@@ -52,6 +64,8 @@ export default class BabylonApp {
         this._setupMeshes();
         this._setupInspector();
         this._scene.onPointerMove = this.pickMeshOnHover;
+        this._depthRenderer = this._getDepthRenderer();
+        this._setupPickedMeshOutline();
 
         this.engine.runRenderLoop(() => {
             if (!this._scene) {
@@ -176,6 +190,30 @@ export default class BabylonApp {
                 );
             },
         );
+    }
+
+    private _getDepthRenderer(): DepthRenderer {
+        const depthRenderer = this._scene.enableDepthRenderer();
+        depthRenderer.getDepthMap().renderList = []; // Only added picked meshes to the render list
+
+        return depthRenderer;
+    }
+
+    private _setupPickedMeshOutline(): void {
+        const outlinePostProcess = new PostProcess(
+            "outline post process",
+            "./shaders/outline-postprocess",
+            null,
+            ["pickedMeshDepthSampler"],
+            1.0,
+            this._camera,
+        );
+        outlinePostProcess.onApply = (effect) => {
+            effect.setTexture(
+                "pickedMeshDepthSampler",
+                this._depthRenderer.getDepthMap(),
+            );
+        };
     }
 
     private async _setupInspector(): Promise<void> {
