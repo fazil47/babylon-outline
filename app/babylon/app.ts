@@ -1,4 +1,5 @@
 import {
+    AbstractMesh,
     ArcRotateCamera,
     Color3,
     Engine,
@@ -14,38 +15,50 @@ import { registerBuiltInLoaders } from "@babylonjs/loaders/dynamic";
 
 export default class BabylonApp {
     engine: Engine;
-    scene: Scene;
-    camera: ArcRotateCamera;
+
+    private _scene: Scene;
+    private _camera: ArcRotateCamera;
+    private _pickedMesh: AbstractMesh | null = null;
+
+    private pickMeshOnHover = (): void => {
+        const pickingInfo = this._scene.pick(
+            this._scene.pointerX,
+            this._scene.pointerY,
+        );
+
+        this._pickedMesh = pickingInfo.pickedMesh;
+    };
 
     constructor(canvas: HTMLCanvasElement) {
         this.engine = new Engine(canvas);
-        this.scene = new Scene(this.engine);
+        this._scene = new Scene(this.engine);
 
-        this.camera = new ArcRotateCamera(
+        this._camera = new ArcRotateCamera(
             "camera",
             -0.961067694771414,
             1.2413272669014423,
             8,
             Vector3.Zero(),
-            this.scene,
+            this._scene,
         );
-        this.camera.attachControl();
+        this._camera.attachControl();
 
         new HemisphericLight(
             "hemi-light",
-            this.camera.position,
-            this.scene,
+            this._camera.position,
+            this._scene,
         );
 
         this._setupMeshes();
-        this._createInspector();
+        this._setupInspector();
+        this._scene.onPointerMove = this.pickMeshOnHover;
 
         this.engine.runRenderLoop(() => {
-            if (!this.scene) {
+            if (!this._scene) {
                 throw new Error("No scene");
             }
 
-            this.scene.render();
+            this._scene.render();
         });
     }
 
@@ -154,7 +167,7 @@ export default class BabylonApp {
             null,
             "/models/lion/",
             "lion.obj",
-            this.scene,
+            this._scene,
             (progressEvent) => {
                 console.log(
                     `Loading lion: ${
@@ -165,7 +178,7 @@ export default class BabylonApp {
         );
     }
 
-    private async _createInspector() {
+    private async _setupInspector(): Promise<void> {
         if (process.env.NODE_ENV === "development") {
             const { Inspector } = await import("@babylonjs/inspector");
             let isVisible = false;
@@ -179,7 +192,7 @@ export default class BabylonApp {
                         Inspector.Hide();
                         isVisible = false;
                     } else {
-                        Inspector.Show(this.scene, {});
+                        Inspector.Show(this._scene, {});
                         isVisible = true;
                     }
                 }
