@@ -87,6 +87,7 @@ export default class BabylonApp {
         );
 
         if (this._pickedMesh !== pickingInfo.pickedMesh) {
+            // If the picked mesh has changed, recreate the renderList with only the new mesh
             const depthRtt = this._depthRenderer.getDepthMap();
             depthRtt.renderList = [];
 
@@ -102,6 +103,7 @@ export default class BabylonApp {
         this.engine = new Engine(canvas);
         this._scene = new Scene(this.engine);
 
+        // Camera
         this._camera = new ArcRotateCamera(
             "camera",
             -0.961067694771414,
@@ -112,14 +114,18 @@ export default class BabylonApp {
         );
         this._camera.attachControl();
 
+        // Lights
         new HemisphericLight(
             "hemi-light",
             this._camera.position,
             this._scene,
         );
 
+        // Environment and meshes
         this._setupMeshes();
         this._setupInspector();
+
+        // Mesh picking and outline renderer
         this._scene.onPointerMove = this.pickMeshOnHover;
         this._depthRenderer = this._getDepthRenderer();
         this._setupPickedMeshOutline();
@@ -250,14 +256,19 @@ export default class BabylonApp {
     }
 
     private _getDepthRenderer(): DepthRenderer {
+        // This depthRenderer is used for getting the depth map of a scene with only the picked mesh in it
         const depthRenderer = this._scene.enableDepthRenderer();
         const depthMap = depthRenderer.getDepthMap();
         depthMap.renderList = []; // Only add picked meshes to the render list
-        depthMap.resize(1024);
+        depthMap.resize(1024); // Initializes to screen size, always set size to 1024
 
         return depthRenderer;
     }
 
+    /**
+     * Sets up the post process effect for drawing the outline of the picked mesh.
+     * The outline is drawn by applying a Sobel filter over the depth map of a scene with only the picked mesh.
+     */
     private _setupPickedMeshOutline(): void {
         const outlinePostProcess = new PostProcess(
             "outline post process",
@@ -293,6 +304,9 @@ export default class BabylonApp {
         this._outlinePostProcess = outlinePostProcess;
     }
 
+    /**
+     * Make inspector available during development.
+     */
     private async _setupInspector(): Promise<void> {
         if (process.env.NODE_ENV === "development") {
             const { Inspector } = await import("@babylonjs/inspector");
