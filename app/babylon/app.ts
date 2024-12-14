@@ -1,20 +1,19 @@
-import {
-    AbstractMesh,
-    ArcRotateCamera,
-    Color3,
-    DepthRenderer,
-    Engine,
-    HemisphericLight,
-    Mesh,
-    MeshBuilder,
-    PostProcess,
-    Scene,
-    SceneLoader,
-    StandardMaterial,
-    Vector2,
-    Vector3,
-} from "@babylonjs/core";
-import { registerBuiltInLoaders } from "@babylonjs/loaders/dynamic";
+import type { AbstractMesh, Mesh } from "@babylonjs/core";
+
+import { Engine } from "@babylonjs/core/Engines";
+import { Scene } from "@babylonjs/core/scene";
+import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
+import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
+import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
+import { DepthRenderer } from "@babylonjs/core/Rendering/depthRenderer";
+import { PostProcess } from "@babylonjs/core/PostProcesses/postProcess";
+import { Color3, Vector2, Vector3 } from "@babylonjs/core/Maths";
+import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
+import { OBJFileLoader } from "@babylonjs/loaders/OBJ/objFileLoader";
+
+import "@babylonjs/core/Rendering/depthRendererSceneComponent";
+import "@babylonjs/core/Culling/ray";
 
 export const minBlurRadius = 0.1;
 export const maxBlurRadius = 1.0;
@@ -239,7 +238,8 @@ export default class BabylonApp {
         }
 
         // Load the OBJ Mesh
-        registerBuiltInLoaders();
+        SceneLoader.RegisterPlugin(new OBJFileLoader());
+
         await SceneLoader.ImportMeshAsync(
             null,
             "./models/lion/",
