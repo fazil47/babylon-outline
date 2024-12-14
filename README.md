@@ -11,6 +11,12 @@ npx create-remix@latest --template remix-run/remix/templates/spa
 
 ## How to run
 
+Install dependencies:
+
+```zsh
+npm install
+```
+
 To run in development mode:
 
 ```zsh
