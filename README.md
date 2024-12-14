@@ -3,6 +3,9 @@
 Based on the [Remix SPA Mode](https://remix.run/docs/en/main/guides/spa-mode)
 template.
 
+Hosted at:
+[fazil47.github.io/babylon-outline](https://fazil47.github.io/babylon-outline/)
+
 Bootstrapped using:
 
 ```zsh
