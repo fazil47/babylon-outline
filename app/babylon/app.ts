@@ -30,7 +30,6 @@ export default class BabylonApp {
     private _blurRadius: number = 0.1;
     private _outlineThickness: number = 0.9;
     private _outlineColor: Color3 = Color3.Purple();
-    private _outlinePostProcess: PostProcess | null = null;
 
     public get blurRadius(): number {
         return this._blurRadius;
@@ -43,11 +42,6 @@ export default class BabylonApp {
         } else {
             this._blurRadius = value;
         }
-
-        this._outlinePostProcess?.getEffect().setFloat(
-            "blurRadius",
-            this._blurRadius,
-        );
     }
 
     public get outlineThickness(): number {
@@ -61,11 +55,6 @@ export default class BabylonApp {
         } else {
             this._outlineThickness = value;
         }
-
-        this._outlinePostProcess?.getEffect().setFloat(
-            "outlineThreshold",
-            1.0 - this._outlineThickness,
-        );
     }
 
     public get outlineColor(): string {
@@ -73,10 +62,6 @@ export default class BabylonApp {
     }
     public set outlineColor(value: string) {
         this._outlineColor = Color3.FromHexString(value);
-        this._outlinePostProcess?.getEffect().setColor3(
-            "outlineColor",
-            this._outlineColor,
-        );
     }
 
     private pickMeshOnHover = (): void => {
@@ -300,8 +285,7 @@ export default class BabylonApp {
             effect.setFloat("outlineThreshold", 1.0 - this._outlineThickness);
             effect.setColor3("outlineColor", this._outlineColor);
         };
-        outlinePostProcess.samples = 4;
-        this._outlinePostProcess = outlinePostProcess;
+        outlinePostProcess.samples = 4; // MSAA
     }
 
     /**
