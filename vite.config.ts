@@ -8,10 +8,16 @@ declare module "@remix-run/node" {
   }
 }
 
+const basename = process.env.NODE_ENV === "production"
+  ? "/babylon-outline/"
+  : "/";
+
 export default defineConfig({
+  base: basename,
   plugins: [
     remix({
       ssr: false,
+      basename,
       future: {
         v3_fetcherPersist: true,
         v3_relativeSplatPath: true,

@@ -242,7 +242,7 @@ export default class BabylonApp {
         registerBuiltInLoaders();
         await SceneLoader.ImportMeshAsync(
             null,
-            "/models/lion/",
+            "./models/lion/",
             "lion.obj",
             this._scene,
             (progressEvent) => {
