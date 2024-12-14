@@ -11,9 +11,15 @@ import {
     Scene,
     SceneLoader,
     StandardMaterial,
+    Vector2,
     Vector3,
 } from "@babylonjs/core";
 import { registerBuiltInLoaders } from "@babylonjs/loaders/dynamic";
+
+export const minBlurRadius = 0.1;
+export const maxBlurRadius = 1.0;
+export const minOutlineThickness = 0.1;
+export const maxOutlineThickness = 0.9;
 
 export default class BabylonApp {
     engine: Engine;
@@ -22,6 +28,57 @@ export default class BabylonApp {
     private _camera: ArcRotateCamera;
     private _pickedMesh: AbstractMesh | null = null;
     private _depthRenderer: DepthRenderer;
+    private _blurRadius: number = 0.1;
+    private _outlineThickness: number = 0.9;
+    private _outlineColor: Color3 = Color3.Purple();
+    private _outlinePostProcess: PostProcess | null = null;
+
+    public get blurRadius(): number {
+        return this._blurRadius;
+    }
+    public set blurRadius(value: number) {
+        if (value < minBlurRadius) {
+            this._blurRadius = minBlurRadius;
+        } else if (value > maxBlurRadius) {
+            this._blurRadius = maxBlurRadius;
+        } else {
+            this._blurRadius = value;
+        }
+
+        this._outlinePostProcess?.getEffect().setFloat(
+            "blurRadius",
+            this._blurRadius,
+        );
+    }
+
+    public get outlineThickness(): number {
+        return this._outlineThickness;
+    }
+    public set outlineThickness(value: number) {
+        if (value < minOutlineThickness) {
+            this._outlineThickness = minOutlineThickness;
+        } else if (value > maxOutlineThickness) {
+            this._outlineThickness = maxOutlineThickness;
+        } else {
+            this._outlineThickness = value;
+        }
+
+        this._outlinePostProcess?.getEffect().setFloat(
+            "outlineThreshold",
+            1.0 - this._outlineThickness,
+        );
+    }
+
+    public get outlineColor(): string {
+        return this._outlineColor.toHexString();
+    }
+    public set outlineColor(value: string) {
+        this._outlineColor = Color3.FromHexString(value);
+        this._outlinePostProcess?.getEffect().setColor3(
+            "outlineColor",
+            this._outlineColor,
+        );
+    }
 
     private pickMeshOnHover = (): void => {
         const pickingInfo = this._scene.pick(
@@ -194,7 +251,9 @@ export default class BabylonApp {
 
     private _getDepthRenderer(): DepthRenderer {
         const depthRenderer = this._scene.enableDepthRenderer();
-        depthRenderer.getDepthMap().renderList = []; // Only added picked meshes to the render list
+        const depthMap = depthRenderer.getDepthMap();
+        depthMap.renderList = []; // Only add picked meshes to the render list
+        depthMap.resize(1024);
 
         return depthRenderer;
     }
@@ -204,7 +263,13 @@ export default class BabylonApp {
             "outline post process",
             "./shaders/outline-postprocess",
             null,
-            ["pickedMeshDepthSampler"],
+            [
+                "pickedMeshDepthSampler",
+                "screenSize",
+                "blurRadius",
+                "outlineColor",
+                "outlineThreshold",
+            ],
             1.0,
             this._camera,
         );
@@ -213,7 +278,19 @@ export default class BabylonApp {
                 "pickedMeshDepthSampler",
                 this._depthRenderer.getDepthMap(),
             );
+            effect.setVector2(
+                "screenSize",
+                new Vector2(
+                    this.engine.getRenderWidth(),
+                    this.engine.getRenderHeight(),
+                ),
+            );
+            effect.setFloat("blurRadius", this._blurRadius);
+            effect.setFloat("outlineThreshold", 1.0 - this._outlineThickness);
+            effect.setColor3("outlineColor", this._outlineColor);
         };
+        outlinePostProcess.samples = 4;
+        this._outlinePostProcess = outlinePostProcess;
     }
 
     private async _setupInspector(): Promise<void> {
