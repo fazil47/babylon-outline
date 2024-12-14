@@ -4,8 +4,11 @@ import SceneControls from "~/components/scene-controls";
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "New Remix App" },
-    { name: "description", content: "Welcome to Remix!" },
+    { title: "Babylon.js Outline" },
+    {
+      name: "description",
+      content: "A demo showcasing mesh picking with an outline.",
+    },
   ];
 };
 
